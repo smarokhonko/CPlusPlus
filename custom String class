@@ -1,0 +1,169 @@
+#include <iostream>
+
+class String
+{
+public:
+   String() : m_str(nullptr), m_size(0)
+   {}
+
+   String(const char* str)
+   {
+      std::cout << "constructor" << std::endl;
+
+      m_size = strlen(str);
+      m_str = new char[m_size + 1];
+      strcpy(str, m_str);
+   }
+
+   String(const String& other)
+   {
+      std::cout << "copy constructor" << std::endl;
+
+      m_size = other.m_size;
+      m_str = new char[m_size + 1];
+
+      strcpy(other.m_str, m_str);
+   }
+
+   String& operator=(const String& other)
+   {
+      std::cout << "assigment oper" << std::endl;
+
+      if (this == &other)
+         return *this;
+
+      delete m_str;
+      m_size = 0;
+
+      m_size = other.m_size;
+      m_str = new char[m_size + 1];
+
+      strcpy(other.m_str, m_str);
+   }
+
+   String(String&& other)
+   {
+      std::cout << "move constructor" << std::endl;
+
+      m_str = other.m_str;
+      m_size = other.m_size;
+
+      other.m_str = nullptr;
+      other.m_size = 0;
+   }
+
+   String& operator=(String&& other)
+   {
+      std::cout << "move assigment" << std::endl;
+
+      if (this == &other)
+         return *this;
+
+      delete m_str;
+      m_size = 0;
+
+      m_str = other.m_str;
+      m_size = other.m_size;
+
+      other.m_str = nullptr;
+      other.m_size = 0;
+   }
+
+   String& operator+=(const String& other)
+   {
+      size_t newSize = m_size + other.m_size;
+      char* newStr = new char[newSize + 1];
+
+      strcpy(m_str, newStr, false);
+      strcpy(other.m_str, newStr + m_size);
+
+      delete m_str;
+      m_size = 0;
+
+      m_str = newStr;
+      m_size = newSize;
+
+      return *this;
+   }
+
+   String operator+(const String& other)
+   {
+      String temp;
+      temp.m_size = m_size + other.m_size;
+      temp.m_str = new char[temp.m_size + 1];
+
+      strcpy(m_str, temp.m_str, false);
+      strcpy(other.m_str, temp.m_str + m_size);
+
+      return temp;
+   }
+
+
+   size_t strlen(const char* str)
+   {
+      size_t size = 0;
+      int i = 0;
+
+      while (*(str + i) != '\0')
+      {
+         ++i;
+         ++size;
+      }
+
+      return size;
+   }
+
+   void strcpy(const char* in, char* out, bool nullTermination = true)
+   {
+      int i = 0;
+
+      while (*(in + i) != '\0')
+      {
+         *(out + i) = *(in + i);
+         ++i;
+      }
+      
+      if(nullTermination)
+         *(out + i) = '\0';
+   }
+
+   friend std::ostream& operator<<(std::ostream& out, const String& str);
+
+private:
+   char* m_str;
+   size_t m_size;
+};
+
+std::ostream& operator<<(std::ostream& out, const String& str)
+{
+   int i = 0;
+
+   while (*(str.m_str + i) != '\0')
+   {
+      out << *(str.m_str + i);
+      ++i;
+   }
+
+   out << std::endl;
+
+   return out;
+}
+
+void main()
+{
+   String str1("aaaaa");
+   String str2("aaaaa");
+
+   String str3 = str1;
+   
+   str3 = str2;
+   str2 = "bbb";
+
+
+   //String str4 = std::move(str1);
+
+   str2 += str1;
+   String str5 = str3 + str1;
+
+   std::cout << str5;
+}
