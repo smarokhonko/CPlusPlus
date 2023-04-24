@@ -1,0 +1,185 @@
+#include <iostream>
+
+
+template <typename T>
+class shared_ptr
+{
+public:
+   shared_ptr()
+      : m_ptr(nullptr)
+      , ref_count(new int(0))
+   {
+   }
+
+   shared_ptr(T* ptr)
+      : m_ptr(ptr)
+      , ref_count(new int(1))
+   {
+   }
+
+   ~shared_ptr()
+   {
+      std::cout << "delete" << std::endl;
+      if (*ref_count == 0)
+      {
+         delete m_ptr;
+         delete ref_count;
+      }
+   }
+
+   shared_ptr(const shared_ptr& other)
+   {
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+      ++(*ref_count);
+   }
+
+   shared_ptr& operator=(const shared_ptr& other)
+   {
+      if (this == &other)
+         return *this;
+      
+      if (ref_count && --(*ref_count) == 0)
+      {
+         delete m_ptr;
+         delete ref_count;
+      }
+
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+      ++(*ref_count);
+
+      return *this;
+   }
+
+   shared_ptr(shared_ptr&& other)
+   {
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+
+      other.m_ptr = nullptr;
+      other.ref_count = nullptr;
+   }
+
+   shared_ptr& operator=(shared_ptr&& other)
+   {
+      if (this == &other)
+         return *this;
+
+
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+
+      other.m_ptr = nullptr;
+      other.ref_count = nullptr;
+
+      return *this;
+   }
+
+   size_t use_count() const
+   {
+      return *ref_count;
+   }
+
+   T* get() const
+   {
+      return m_ptr;
+   }
+
+   T& operator*() const
+   {
+      return *m_ptr;
+   }
+
+   T* operator->() const
+   {
+      return m_ptr;
+   }
+
+   operator bool() const
+   {
+      return m_ptr ? true : false;
+   }
+
+   shared_ptr<T>& reset(const shared_ptr& other)
+   {
+      if (this == &other)
+         return *this;
+
+      if (ref_count && --(*ref_count) == 0)
+      {
+         delete m_ptr;
+         delete ref_count;
+      }
+
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+
+      ++(*ref_count);
+
+      return *this;
+   }
+
+   shared_ptr<T>& swap(shared_ptr& other)
+   {
+      if (this == &other)
+         return *this;
+
+      T* tempPtr = m_ptr;
+      int* tempRefCount = ref_count;
+
+      m_ptr = other.m_ptr;
+      ref_count = other.ref_count;
+
+      other.m_ptr = tempPtr;
+      other.ref_count = tempRefCount;
+
+      return *this;
+   }
+
+private:
+   T* m_ptr;
+   int* ref_count;
+};
+
+
+
+int main() {
+   
+   shared_ptr<int> ptr(new int(11));
+
+   shared_ptr<int> ptr1(ptr); // copy constructor
+   int ref_count = ptr1.use_count();
+
+   shared_ptr<int> ptr2(new int(22));
+   shared_ptr<int> ptr3(new int(33));
+
+   ptr3 = ptr2; // copy assigment operator
+
+   int* raw_ptr = ptr3.get();
+
+   if (ptr3)
+   {
+      std::cout << "aaaa" << std::endl;
+   }
+
+   shared_ptr<int> ptr4(new int(44));
+   shared_ptr<int> ptr5(new int(55));
+
+   ptr4.reset(ptr5);
+
+
+   shared_ptr<int> ptr6(new int(66));
+   shared_ptr<int> ptr7(new int(77));
+
+   ptr6.swap(ptr7);
+
+
+   shared_ptr<int> ptr8(new int(88));
+   shared_ptr<int> ptr9(new int(99));
+
+   shared_ptr<int> ptr10(std::move(ptr7));
+   ptr9 = ptr8;
+
+   return 0;
+}
